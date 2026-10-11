@@ -8,6 +8,8 @@ function setup() {
         sineColor: r.GREEN,
         cosColor: r.BLUE,
         thickness: 2,
+        amplitude: 80,
+        frequency: 0.02
     };
 
     world.origin = {
@@ -46,17 +48,14 @@ function drawAxes(world) {
 }
 
 function drawWaves(world) {
-    const amplitude = 50;
-    const frequency = 0.025;
-
     let display = 0;
     let previousSineY = 0;
     let previousCosY = 0;
 
     for (let i = 0; i < world.windowWidth; i += 0.25) {
         const X = world.origin.x + i;
-        const sineY = world.origin.y - Math.sin(i * frequency) * amplitude;
-        const cosY = world.origin.y - Math.cos(i * frequency) * amplitude;
+        const sineY = world.origin.y - Math.sin(i * world.frequency) * world.amplitude;
+        const cosY = world.origin.y - Math.cos(i * world.frequency) * world.amplitude;
 
         const hasCrossedSine =
             (previousSineY < world.origin.y && sineY >= world.origin.y) ||
@@ -79,8 +78,18 @@ function drawWaves(world) {
     }
 }
 
-function drawDottedLine(start, end) {
-    
+function drawDottedLine(world, amplitude, start, end) {
+    let startX = Math.max(start.x, end.x);
+    const endX = Math.min(start.x, end.x);
+
+    const commonY = world.origin.y + amplitude;
+
+    const delta = 10;
+
+    while (startX > endX) {
+        r.DrawCircle(startX, commonY, 2, r.BLACK);
+        startX -= delta;
+    }
 }
 
 function drawLegend(world) {
@@ -109,16 +118,12 @@ function drawProjectionLine(world, X, projection) {
     r.DrawLine(X, textY + 10, X, world.windowHeight, r.BLACK);
 }
 
-
-
 function drawHorizontalProjectionLine(world, amplitude, projection) {
     const textX = world.origin.x - 30;
     const textY = world.origin.y - amplitude;
-
-    r.DrawText(projection + "", textX, textY - 10, 30, r.BLACK);
-    r.DrawLine(world.origin.x, textY, world.windowWidth, textY, r.BLACK);
     
-
+    r.DrawText(projection + "", textX, textY - 10, 30, r.BLACK);
+    drawDottedLine(world, amplitude, {x: world.origin.x, y: textY + 10}, {x: world.windowWidth, y: textY + 10})
 }
 
 function draw(world) {
@@ -129,7 +134,9 @@ function draw(world) {
     drawWaves(world);
     drawLegend(world);
 
-    drawHorizontalProjectionLine(world, 50, -1);
+    drawHorizontalProjectionLine(world, world.amplitude, 1);
+    drawHorizontalProjectionLine(world, 0, 0);
+    drawHorizontalProjectionLine(world, -world.amplitude, -1);
 
     r.EndDrawing();
 }
